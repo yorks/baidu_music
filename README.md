@@ -11,6 +11,7 @@
 ## 用法
 
 
+````
 python2 download.py -h
 download.py: a script to download baidu mp3 ...
 Usage:
@@ -21,6 +22,7 @@ download.py -a ablum -s song -d dir -h help
     -r, --rate: the the song rate in kbps, default: auto(320->192->...)
     -h, --help: to see this.
         --all : download all the songs by the given ablum, used with -a option together
+```
 
 
 ##有问题反馈
