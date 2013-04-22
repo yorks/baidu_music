@@ -7,7 +7,9 @@ import os
 import sys
 import re
 import getopt
-
+import copy
+import time
+import random
 import cookie_db
 
 verbose=False
@@ -138,17 +140,16 @@ def progress_bar(count, block_size, total_size, song_info):
 class BAIDU_MUSIC(object):
     def __init__(self, cookies):
         self.cookies = cookies
-
-    def request_baidu(self, url):
-        if verbose: print "request url[%s]"% url
-        host = url.split('/')[2]
-        headers = {
-            #'Host':"%s"% host,
+        self.headers = {
             'User-Agent':'Mozilla/5.0 (X11; Linux i686; rv:18.0) Gecko/20100101 Firefox/18.0',
             'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
             'Cookie':'%s'% self.cookies
             }
-        req=urllib2.Request(url=url, headers=headers)
+
+    def request_baidu(self, url):
+        if verbose: print "request url[%s]"% url
+        host = url.split('/')[2]
+        req=urllib2.Request(url=url, headers=self.headers)
         conn = urllib2.urlopen(req)
         return conn
 
@@ -177,6 +178,7 @@ class BAIDU_MUSIC(object):
         title = ''
         ablum = ''
         singer = ''
+        tmp_collect = False
         try:
             title  = re.findall('song_title:"(.*)",',res)[0]
             ablum  = re.findall('ablum_name:"(.*)",',res)[0]
@@ -192,10 +194,63 @@ class BAIDU_MUSIC(object):
         for rate in rate_list:
             if rate not in song_info['down_list'].keys():
                 down_link = 'http://yinyueyun.baidu.com/data/cloud/downloadsongfile?songIds=%s&rate=%s'% (sid, rate)
-                song_info['down_list'][rate]= down_link
+                if not self._iscollect( sid ):
+                    if verbose: print "tmp collect the song."
+                    tmp_collect = True
+                    self.collect( sid )
+                real_url = self.get_real_link( down_link )
+                if tmp_collect:
+                    if verbose: print "un collect the song."
+                    self.collect( sid, do=False )
+                song_info['down_list'][rate]= real_url
 
         if verbose: print "song_info: %s"% song_info
         return song_info
+
+    def get_real_link(self, yinyueyun_link):
+        conn = self.request_baidu(yinyueyun_link)
+        real_url = conn.url
+        return real_url
+
+    def _iscollect(self, ids, type_='song'):
+        url = 'http://music.baidu.com/data/user/isCollect?type=%s&ids=%s'% (type_, ids)
+        conn = self.request_baidu( url )
+        try:
+            ret = eval( conn.read() )
+        except:
+            return False
+        if ret['errorCode'] == 22000 and ret['data']['isCollect'] == 1:
+            return True
+        else:
+            return False
+
+
+    def collect(self, ids, type_='song', do=True):
+        data = {'ids':ids, 'type':type_}
+        dtime = int(time.time())
+        r=str( random.random() )
+        r3=str( random.randint(111,999) )
+        r=r+str(dtime)+r3
+        url = 'http://music.baidu.com/data/user/collect?.r=%s'% r
+        if not do:
+            url = 'http://music.baidu.com/data/user/deleteCollection?.r=%s'% r
+        if verbose: print url
+        pst_data = urllib.urlencode( data )
+        cl=len(pst_data)
+        headers = copy.deepcopy(self.headers)
+        headers['Content-Length']=cl
+        headers['Content-Type']='application/x-www-form-urlencoded; charset=UTF-8'
+        headers['Referer']='http://music.baidu.com/song/%s'% ids
+        req = urllib2.Request(url=url, headers=headers, data=pst_data)
+        conn = urllib2.urlopen(req)
+        try:
+            ret = eval( conn.read() )
+        except:
+            return False
+        if ret['errorCode'] == 22000:
+            return True
+        else:
+            return False
 
     def download(self, song_info, rate='auto'):
         for c in ['|', '&', '*', '/', '^', '%', '$', '#', '!', ' ']:
@@ -213,7 +268,7 @@ class BAIDU_MUSIC(object):
                 break
 
         elif rate in rate_list:
-            down_link = down_link = song_info['down_list'][rate]
+            down_link = song_info['down_list'][rate]
             song_info['rate'] = rate
 
         if not down_link:
@@ -243,8 +298,7 @@ if __name__ == "__main__":
     if args['sid']:
         song_info = bd_music.get_song_info( args['sid'] )
         song_info['save_dir'] = args['save_dir']
-        #print "Downloading %s-%s...."% (song_info['title'], song_info['singer']),
-        rcode = bd_music.download(song_info)
+        rcode = bd_music.download(song_info, args['rate'])
         if rcode == 200 :
             pass
             #print "done"
