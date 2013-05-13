@@ -22,6 +22,29 @@ download.py -a ablum -s song -d dir -h help
     -r, --rate: the the song rate in kbps, default: auto(320->192->...)
     -h, --help: to see this.
         --all : download all the songs by the given ablum, used with -a option together
+
+e.g:
+
+1. download an ablum:
+$ python2 download.py -a http://music.baidu.com/album/31496572 -d ./31496572/
+Warnning: the save dir[./31496572/] not exist, will be created autoly.
+Downloading 四季列车.mp3(320 kbps) ... 100% done
+Downloading 手语.mp3(320 kbps) ... 100% done
+Downloading 公公偏头痛.mp3(320 kbps) ... 100% done
+Downloading 明明就.mp3(320 kbps) ... 100% done
+Downloading 傻笑.mp3(320 kbps) ... 100% done
+Downloading 比较大的大提琴.mp3(320 kbps) ... 100% done
+Downloading 爱你没差.mp3(320 kbps) ... 100% done
+Downloading 红尘客栈.mp3(320 kbps) ... 100% done
+Downloading 梦想启动.mp3(320 kbps) ... 100% done
+Downloading 大笨钟.mp3(320 kbps) ... 100% done
+Downloading 哪里都是你.mp3(320 kbps) ... 100% done
+Downloading 乌克丽丽.mp3(320 kbps) ... 100% done
+
+2. download a song:
+$ python2 download.py -s http://music.baidu.com/song/31496563 -d ./
+Downloading 红尘客栈.mp3(320 kbps) ... 100% done
+
 ```
 
 

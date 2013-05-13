@@ -88,7 +88,6 @@ def _parse_argv():
         if not aid.isdigit():
             print "\033[1;31mError\033[m: Input the wrong value of ablum. the ablum id must digits"
             sys.exit(1)
-        print aid
     elif sid:
         if sid.endswith('/'):
             sid = sid[:-1]
@@ -309,6 +308,15 @@ if __name__ == "__main__":
 
     elif args['aid']:
         song_list = bd_music.get_song_list( args['aid'] )
-        if song_list:
-            for sid, title in song_list:
-                print sid, title
+        for sid, title in song_list:
+            args['sid'] = sid
+            song_info = bd_music.get_song_info( args['sid'] )
+            song_info['save_dir'] = args['save_dir']
+            rcode = bd_music.download(song_info, args['rate'])
+            if rcode == 200 :
+                pass
+                #print "done"
+            elif rcode == 404 :
+                print "Cannot found download link."
+            elif rcode == 500:
+                print "exception while downloading"
