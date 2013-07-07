@@ -179,9 +179,9 @@ class BAIDU_MUSIC(object):
         singer = ''
         tmp_collect = False
         try:
-            title  = re.findall('song_title:"(.*)",',res)[0]
-            ablum  = re.findall('ablum_name:"(.*)",',res)[0]
-            singer = re.findall('singer_name:"(.*)",',res)[0]
+            title  = re.findall('song_title:\s*"(.*)",',res)[0]
+            ablum  = re.findall('album_name:\s*"(.*)",',res)[0]
+            singer = re.findall('singer_name:\s*"(.*)",',res)[0]
         except:
             print "[Warnning]Cannot get the song title,ablum,singer info!"
             pass
@@ -191,6 +191,9 @@ class BAIDU_MUSIC(object):
             down_link = "http://music.baidu.com"+link
             song_info['down_list'][rate]= down_link
         for rate in rate_list:
+            if rate == '1000':
+                if verbose:print "skip flac rate 1000"
+                continue
             if rate not in song_info['down_list'].keys():
                 down_link = 'http://yinyueyun.baidu.com/data/cloud/downloadsongfile?songIds=%s&rate=%s'% (sid, rate)
                 if not self._iscollect( sid ):
